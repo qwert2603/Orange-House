@@ -1,0 +1,17 @@
+<resources>
+
+    <string name="app_name">Orange House</string>
+
+    <string name="song_title_arthaus">Артхаус</string>
+    <string name="song_title_bez_oc">Без Оцифровки</string>
+    <string name="song_title_vse_v_por">Все в Порядке с Джей Ди</string>
+    <string name="song_title_vse_gora">Все Гораздо Проще</string>
+    <string name="song_title_kogda_tvoy">Когда Твой Друг - Драгдиллер</string>
+    <string name="song_title_kontrast">Контраст Зебры</string>
+    <string name="song_title_lunniy">Лунный Творог</string>
+    <string name="song_title_odna_zhivaya">Одна Живая Ты</string>
+    <string name="song_title_pod_vzrivi">Под Взрывы</string>
+    <string name="song_title_sigareti_i">Сигареты и Время</string>
+    <string name="song_title_sneg_iz">Снег из Пенопласта</string>
+
+</resources>
