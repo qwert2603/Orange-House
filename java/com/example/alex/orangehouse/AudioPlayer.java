@@ -6,18 +6,30 @@ import android.media.MediaPlayer;
 public class AudioPlayer {
 
     private MediaPlayer mPlayer;
-    private OnSongCompletionListener mListener;
+    private OnSongCompletionListener mCompletionListener;
+    private Context mContext;
+    private static AudioPlayer sAudioPlayer;
 
-    public void play(Context context, Song song) {
+    private AudioPlayer(Context context) {
+        mContext = context;
+    }
+
+    public static AudioPlayer get(Context context) {
+        if(sAudioPlayer == null)
+            sAudioPlayer = new AudioPlayer(context.getApplicationContext());
+        return sAudioPlayer;
+    }
+
+    public void play(Song song) {
         if(mPlayer == null) {
             int songId = song.getSongId();
-            mPlayer = MediaPlayer.create(context, songId);
+            mPlayer = MediaPlayer.create(mContext, songId);
             mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
                     stop();
-                    if(mListener != null) {
-                        mListener.onSongCompletion(AudioPlayer.this);
+                    if(mCompletionListener != null) {
+                        mCompletionListener.onSongCompletion(AudioPlayer.this);
                     }
                 }
             });
@@ -51,11 +63,11 @@ public class AudioPlayer {
     }
 
     public void setOnSongCompletionListener(OnSongCompletionListener l) {
-        mListener = l;
+        mCompletionListener = l;
     }
 
     public void removeOnSongCompletionListener() {
-        mListener = null;
+        mCompletionListener = null;
     }
 
 }

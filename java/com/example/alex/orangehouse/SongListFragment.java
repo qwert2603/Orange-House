@@ -3,7 +3,9 @@ package com.example.alex.orangehouse;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
-import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -21,37 +23,17 @@ public class SongListFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        mPlayList = new PlayList();
+        setHasOptionsMenu(true);
+        mPlayList = PlayList.get();
         mPlayList.setRandomMode(true);
         mFirstPlaying = true;
         SongListAdapter adapter = new SongListAdapter();
         setListAdapter(adapter);
-        mPlayer = new AudioPlayer();
+        mPlayer = AudioPlayer.get(getActivity());
         mPlayer.setOnSongCompletionListener(new AudioPlayer.OnSongCompletionListener() {
             @Override
             public void onSongCompletion(AudioPlayer ap) {
-                int prevSongNumber = mPlayList.getCurrentSongNumber();
-                View viewPrevSong = getListView().getChildAt(prevSongNumber);
-                if (viewPrevSong != null) {
-                    ImageView imageViewPrevSong = (ImageView) viewPrevSong.findViewById(R.id.item_song_image_view);
-                    TextView textViewPrevSong = (TextView) viewPrevSong.findViewById(R.id.item_song_text_view);
-                    imageViewPrevSong.setImageResource(R.drawable.play);
-                    textViewPrevSong.setTypeface(null, Typeface.NORMAL);
-                }
-
-                Song nextSong = mPlayList.getNextSong();
-                mPlayer.play(getActivity(), nextSong);
-
-                int newSongNumber = mPlayList.getCurrentSongNumber();
-                View viewNewSong = getListView().getChildAt(newSongNumber);
-                if (viewNewSong != null) {
-                    ImageView imageViewNewSong = (ImageView) viewNewSong.findViewById(R.id.item_song_image_view);
-                    TextView textViewNewSong = (TextView) viewNewSong.findViewById(R.id.item_song_text_view);
-                    imageViewNewSong.setImageResource(R.drawable.pause);
-                    textViewNewSong.setTypeface(null, Typeface.BOLD);
-                }
-
-                ((SongListAdapter)getListAdapter()).notifyDataSetChanged();
+                startNextSong();
             }
         });
     }
@@ -107,7 +89,33 @@ public class SongListFragment extends ListFragment {
 
     private void startNewSong(int songNumber) {
         Song newSong = mPlayList.setCurrentSongNumber(songNumber);
-        mPlayer.play(getActivity(), newSong);
+        mPlayer.play(newSong);
+    }
+
+    private void startNextSong() {
+        int prevSongNumber = mPlayList.getCurrentSongNumber();
+        View viewPrevSong = getListView().getChildAt(prevSongNumber);
+        if (viewPrevSong != null) {
+            ImageView imageViewPrevSong = (ImageView) viewPrevSong.findViewById(R.id.item_song_image_view);
+            TextView textViewPrevSong = (TextView) viewPrevSong.findViewById(R.id.item_song_text_view);
+            imageViewPrevSong.setImageResource(R.drawable.play);
+            textViewPrevSong.setTypeface(null, Typeface.NORMAL);
+        }
+
+        mPlayer.stop();
+        Song nextSong = mPlayList.getNextSong();
+        mPlayer.play(nextSong);
+
+        int newSongNumber = mPlayList.getCurrentSongNumber();
+        View viewNewSong = getListView().getChildAt(newSongNumber);
+        if (viewNewSong != null) {
+            ImageView imageViewNewSong = (ImageView) viewNewSong.findViewById(R.id.item_song_image_view);
+            TextView textViewNewSong = (TextView) viewNewSong.findViewById(R.id.item_song_text_view);
+            imageViewNewSong.setImageResource(R.drawable.pause);
+            textViewNewSong.setTypeface(null, Typeface.BOLD);
+        }
+
+        ((SongListAdapter)getListAdapter()).notifyDataSetChanged();
     }
 
     private class SongListAdapter extends ArrayAdapter<Song> {
@@ -118,7 +126,6 @@ public class SongListFragment extends ListFragment {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            Log.e("AASSDD", position + "");
 
             if(convertView == null)
                 convertView = getActivity().getLayoutInflater().inflate(R.layout.list_item_song, null);
@@ -146,4 +153,25 @@ public class SongListFragment extends ListFragment {
 
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.menu_song_list_fragment, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_next_song:
+                startNextSong();
+                return true;
+            case R.id.menu_item_random:
+                boolean newMode = !mPlayList.getRandomMode();
+                mPlayList.setRandomMode(newMode);
+                item.setTitle(newMode ? R.string.text_random_on : R.string.text_random_off);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 }
