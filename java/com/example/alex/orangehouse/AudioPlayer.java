@@ -21,19 +21,18 @@ public class AudioPlayer {
     }
 
     public void play(Song song) {
-        if(mPlayer == null) {
-            int songId = song.getSongId();
-            mPlayer = MediaPlayer.create(mContext, songId);
-            mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    stop();
-                    if(mCompletionListener != null) {
-                        mCompletionListener.onSongCompletion(AudioPlayer.this);
-                    }
+        stop();
+        int songId = song.getSongId();
+        mPlayer = MediaPlayer.create(mContext, songId);
+        mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                stop();
+                if (mCompletionListener != null) {
+                    mCompletionListener.onSongCompletion(AudioPlayer.this);
                 }
-            });
-        }
+            }
+        });
         mPlayer.start();
     }
 
@@ -69,5 +68,6 @@ public class AudioPlayer {
     public void removeOnSongCompletionListener() {
         mCompletionListener = null;
     }
+
 
 }
