@@ -11,7 +11,7 @@ public class PlayList {
     private boolean mRandomMode = false;
     private Random mRandom = new Random(System.currentTimeMillis());
     private AudioPlayer mPlayer;
-    LinkedList<OnSongCompletionListener> mCompletionListeners = new LinkedList<OnSongCompletionListener>();
+    LinkedList<OnSongCompletionListener> mCompletionListeners = new LinkedList<>();
 
     private static PlayList sPlayList;
 

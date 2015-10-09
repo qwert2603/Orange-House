@@ -11,13 +11,12 @@
         android:padding="4dp"/>
 
     <TextView android:id="@+id/item_song_text_view"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:textSize="16sp"
         android:paddingBottom="14dp"
         android:paddingTop="14dp"
-        android:paddingRight="48dp"
-        android:text="@string/song_title_kogda_tvoy"/>
+        android:paddingRight="48dp" />
 
 </LinearLayout>
