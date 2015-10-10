@@ -23,31 +23,26 @@ public class SongListFragment extends ListFragment {
         setHasOptionsMenu(true);
         mPlayList = PlayList.get(getActivity());
         mPlayList.setRandomMode(true);
-        mPlayList.addOnSongCompletionListener(new PlayList.OnSongCompletionListener() {
+        mPlayList.addPlayingModeChangedListener(new PlayList.OnPlayingModeChangedListener() {
             @Override
-            public void onSongCompletion(PlayList ap) {
-                updateListView();
+            public void onPlayingModeChanged(PlayList ap) {
+                ((SongListAdapter) getListAdapter()).notifyDataSetChanged();
             }
         });
         SongListAdapter adapter = new SongListAdapter();
         setListAdapter(adapter);
     }
 
-    private void updateListView() {
-        ((SongListAdapter)getListAdapter()).notifyDataSetChanged();
-        getListView().setSelection(mPlayList.getCurrentSongNumber());
+    @Override
+    public void onDestroy() {
+        mPlayList.stop();
+        super.onDestroy();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-       updateListView();
-    }
-
-    @Override
-    public void onDestroy() {
-        mPlayList.stop();
-        super.onDestroy();
+        getListView().setSelection(mPlayList.getCurrentSongNumber());
     }
 
     private class SongListAdapter extends ArrayAdapter<Song> {
@@ -77,8 +72,7 @@ public class SongListFragment extends ListFragment {
             imageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    SongDetailsFragment.onSongImageViewClick(mPlayList, position);
-                    ((SongListAdapter) getListAdapter()).notifyDataSetChanged();
+                    SongDetailsFragment.onSongClick(mPlayList, position);
                 }
             });
 
@@ -93,6 +87,10 @@ public class SongListFragment extends ListFragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu_song_list_fragment, menu);
+        if(!mPlayList.getRandomMode()) {
+            MenuItem randomMenuItem = menu.findItem(R.id.menu_item_random);
+            randomMenuItem.setTitle(R.string.text_random_off);
+        }
     }
 
     @Override
@@ -100,7 +98,7 @@ public class SongListFragment extends ListFragment {
         switch (item.getItemId()) {
             case R.id.menu_item_next_song:
                 mPlayList.startNextSong();
-                updateListView();
+                getListView().setSelection(mPlayList.getCurrentSongNumber());
                 return true;
             case R.id.menu_item_random:
                 boolean newMode = !mPlayList.getRandomMode();

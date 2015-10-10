@@ -1,6 +1,7 @@
 package com.example.alex.orangehouse;
 
 import android.content.Context;
+
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -11,7 +12,7 @@ public class PlayList {
     private boolean mRandomMode = false;
     private Random mRandom = new Random(System.currentTimeMillis());
     private AudioPlayer mPlayer;
-    LinkedList<OnSongCompletionListener> mCompletionListeners = new LinkedList<>();
+    LinkedList<OnPlayingModeChangedListener> mPlayingModeChangedListeners = new LinkedList<>();
 
     private static PlayList sPlayList;
 
@@ -34,8 +35,6 @@ public class PlayList {
             @Override
             public void onSongCompletion(AudioPlayer ap) {
                 startNextSong();
-                for(OnSongCompletionListener l : mCompletionListeners)
-                    l.onSongCompletion(PlayList.this);
             }
         });
     }
@@ -101,34 +100,44 @@ public class PlayList {
         stop();
         Song newSong = setNewSongNumber(songNumber);
         mPlayer.play(newSong);
+        notifyPlayingModeChangedListeners();
     }
 
     public void pause() {
         mPlayer.pause();
+        notifyPlayingModeChangedListeners();
     }
 
     public void resume() {
         mPlayer.resume();
+        notifyPlayingModeChangedListeners();
     }
 
     public void stop() {
         mPlayer.stop();
+        notifyPlayingModeChangedListeners();
     }
 
     public boolean isPlaying() {
         return mPlayer.isPlaying();
     }
 
-    public interface OnSongCompletionListener {
-        void onSongCompletion(PlayList ap);
+    // начало/пауза/продолжение/остановка воспроизведения или начало новой песни
+    public interface OnPlayingModeChangedListener {
+        void onPlayingModeChanged(PlayList ap);
     }
 
-    public void addOnSongCompletionListener(OnSongCompletionListener l) {
-        mCompletionListeners.add(l);
+    public void addPlayingModeChangedListener(OnPlayingModeChangedListener l) {
+        mPlayingModeChangedListeners.add(l);
     }
 
-    public void removeOnSongCompletionListener(OnSongCompletionListener l) {
-        mCompletionListeners.remove(l);
+    public void removePlayingModeChangedListener(OnPlayingModeChangedListener l) {
+        mPlayingModeChangedListeners.remove(l);
+    }
+
+    private void notifyPlayingModeChangedListeners() {
+        for(OnPlayingModeChangedListener l : mPlayingModeChangedListeners)
+            l.onPlayingModeChanged(this);
     }
 
 }

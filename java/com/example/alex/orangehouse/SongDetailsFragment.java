@@ -10,6 +10,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class SongDetailsFragment extends Fragment {
@@ -29,18 +30,20 @@ public class SongDetailsFragment extends Fragment {
     private ImageView imageView;
     private TextView titleTextView;
     private TextView textViewLyrics;
+    private PlayList.OnPlayingModeChangedListener mOnPlayingModeChangeListener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         mPlayList = PlayList.get(getActivity());
-        mPlayList.addOnSongCompletionListener(new PlayList.OnSongCompletionListener() {
+        mOnPlayingModeChangeListener = new PlayList.OnPlayingModeChangedListener() {
             @Override
-            public void onSongCompletion(PlayList ap) {
+            public void onPlayingModeChanged(PlayList ap) {
                 makeSongPlayingDesign(imageView, titleTextView, mPlayList, mSongNumber);
             }
-        });
+        };
+        mPlayList.addPlayingModeChangedListener(mOnPlayingModeChangeListener);
         mSongNumber = getArguments().getInt(currentSongNumberKey);
         mSong = mPlayList.getSongByNumber(mSongNumber);
     }
@@ -51,15 +54,16 @@ public class SongDetailsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_song_details, container, false);
 
         titleTextView = (TextView) view.findViewById(R.id.fragment_song_details_title_text_view);
-
         imageView = (ImageView) view.findViewById(R.id.fragment_song_details_image_view);
-        imageView.setOnClickListener(new View.OnClickListener() {
+        LinearLayout titleLinearLayout = (LinearLayout) view.findViewById(R.id.fragment_song_details_title_linear_layout);
+        titleLinearLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onSongImageViewClick(mPlayList, mSongNumber);
-                makeSongPlayingDesign(imageView, titleTextView, mPlayList, mSongNumber);
+                onSongClick(mPlayList, mSongNumber);
             }
         });
+
+        makeSongPlayingDesign(imageView, titleTextView, mPlayList, mSongNumber);
 
         textViewLyrics = (TextView) view.findViewById(R.id.fragment_song_details_lyrics_text_view);
         textViewLyrics.setText(mSong.getLyricsId());
@@ -68,9 +72,9 @@ public class SongDetailsFragment extends Fragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        makeSongPlayingDesign(imageView, titleTextView, mPlayList, mSongNumber);
+    public void onDestroy() {
+        super.onDestroy();
+        mPlayList.removePlayingModeChangedListener(mOnPlayingModeChangeListener);
     }
 
     // назначить imageView картинку (play/pause) и название песни в titleTextView и, если нужно, BOLD
@@ -90,7 +94,7 @@ public class SongDetailsFragment extends Fragment {
     }
 
     // обработать нажатие на imageView (включить/выключить песню)
-    public static void onSongImageViewClick(PlayList playList, int songNumber) {
+    public static void onSongClick(PlayList playList, int songNumber) {
         if (playList.getCurrentSongNumber() == songNumber) {
             if (playList.isPlaying()) {
                 playList.pause();
