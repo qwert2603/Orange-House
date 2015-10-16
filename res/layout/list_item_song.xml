@@ -2,7 +2,8 @@
     android:id="@+id/item_song_linear_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:background="@drawable/background_activated">
 
     <ImageView android:id="@+id/item_song_image_view"
         android:layout_width="wrap_content"

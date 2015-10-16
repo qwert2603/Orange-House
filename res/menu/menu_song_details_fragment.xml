@@ -1,0 +1,9 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/menu_item_make_next"
+        android:title="@string/text_make_next"
+        android:icon="@drawable/make_next"
+        app:showAsAction="ifRoom"/>
+
+</menu>

@@ -6,6 +6,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,21 +31,21 @@ public class SongDetailsFragment extends Fragment {
     private Song mSong;
     private ImageView imageView;
     private TextView titleTextView;
-    private TextView textViewLyrics;
-    private PlayList.OnPlayingModeChangedListener mOnPlayingModeChangeListener;
+    private TextView lyricsTextView;
+    private PlayList.OnPlayingModeChangedListener mOnPlayingModeChangedListener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         mPlayList = PlayList.get(getActivity());
-        mOnPlayingModeChangeListener = new PlayList.OnPlayingModeChangedListener() {
+        mOnPlayingModeChangedListener = new PlayList.OnPlayingModeChangedListener() {
             @Override
             public void onPlayingModeChanged(PlayList ap) {
                 makeSongPlayingDesign(imageView, titleTextView, mPlayList, mSongNumber);
             }
         };
-        mPlayList.addPlayingModeChangedListener(mOnPlayingModeChangeListener);
+        mPlayList.addOnPlayingModeChangedListener(mOnPlayingModeChangedListener);
         mSongNumber = getArguments().getInt(currentSongNumberKey);
         mSong = mPlayList.getSongByNumber(mSongNumber);
     }
@@ -65,8 +67,8 @@ public class SongDetailsFragment extends Fragment {
 
         makeSongPlayingDesign(imageView, titleTextView, mPlayList, mSongNumber);
 
-        textViewLyrics = (TextView) view.findViewById(R.id.fragment_song_details_lyrics_text_view);
-        textViewLyrics.setText(mSong.getLyricsId());
+        lyricsTextView = (TextView) view.findViewById(R.id.fragment_song_details_lyrics_text_view);
+        lyricsTextView.setText(mSong.getLyricsId());
 
         return view;
     }
@@ -74,10 +76,10 @@ public class SongDetailsFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mPlayList.removePlayingModeChangedListener(mOnPlayingModeChangeListener);
+        mPlayList.removeOnPlayingModeChangedListener(mOnPlayingModeChangedListener);
     }
 
-    // назначить imageView картинку (play/pause) и название песни в titleTextView и, если нужно, BOLD
+    // назначить imageView картинку (play/pause) и название песни в titleTextView и, если нужно, BOLD или ITALIC
     public static void makeSongPlayingDesign(ImageView imageView, TextView titleTextView, PlayList playList, int songNumber) {
         Song song = playList.getSongByNumber(songNumber);
         titleTextView.setText(song.getTitleId());
@@ -90,6 +92,17 @@ public class SongDetailsFragment extends Fragment {
             if (playList.isPlaying()) {
                 imageView.setImageResource(R.drawable.pause);
             }
+        }
+        if(songNumber == playList.getNextSongNumber()) {
+            if(songNumber == playList.getCurrentSongNumber()) {
+                titleTextView.setTypeface(null, Typeface.BOLD_ITALIC);
+            }
+            else {
+                titleTextView.setTypeface(null, Typeface.ITALIC);
+            }
+        }
+        if(playList.getRepeatMode() && songNumber == playList.getNextSongNumberIgnoringRepeat()) {
+            titleTextView.setText(titleTextView.getText() + " [next]");
         }
     }
 
@@ -108,13 +121,23 @@ public class SongDetailsFragment extends Fragment {
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.menu_song_details_fragment, menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
                 NavUtils.navigateUpFromSameTask(getActivity());
                 return true;
+            case R.id.menu_item_make_next:
+                mPlayList.setNextSongNumber(mSongNumber);
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
+
 }

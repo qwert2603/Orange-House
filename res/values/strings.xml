@@ -16,5 +16,11 @@
     <string name="text_next">next</string>
     <string name="text_random_on">random: ON</string>
     <string name="text_random_off">random: OFF</string>
+    <string name="text_repeat_on">repeat: ON</string>
+    <string name="text_repeat_off">repeat: OFF</string>
+    <string name="text_now">now</string>
+    <string name="text_nothing_is_playing">nothing is playing</string>
+    <string name="text_make_next">play this song after current</string>
+    <string name="text_selected_count">Selected:</string>
 
 </resources>

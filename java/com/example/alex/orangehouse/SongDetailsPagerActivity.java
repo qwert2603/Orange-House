@@ -11,6 +11,7 @@ public class SongDetailsPagerActivity extends AppCompatActivity {
 
     private ViewPager mViewPager;
     private PlayList mPlayList;
+    private PlayList.OnPlayingModeChangedListener mOnPlayingModeChangedListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,25 +31,44 @@ public class SongDetailsPagerActivity extends AppCompatActivity {
                 return mPlayList.getSongCount();
             }
         });
-        mViewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
-
-            @Override
-            public void onPageSelected(int position) {
-                updateTitle(position);
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {}
-        });
         int songNumber = getIntent().getIntExtra(EXTRA_SONG_NUMBER, 0);
-        updateTitle(songNumber);
+        updateTitle();
+        updateSubtitle();
+        mOnPlayingModeChangedListener = new PlayList.OnPlayingModeChangedListener() {
+            @Override
+            public void onPlayingModeChanged(PlayList ap) {
+                updateTitle();
+                updateSubtitle();
+            }
+        };
+        mPlayList.addOnPlayingModeChangedListener(mOnPlayingModeChangedListener);
         mViewPager.setCurrentItem(songNumber);
     }
 
-    private void updateTitle(int songNumber) {
-        setTitle(mPlayList.getSongByNumber(songNumber).getTitleId());
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mPlayList.removeOnPlayingModeChangedListener(mOnPlayingModeChangedListener);
+    }
+
+    private void updateTitle() {
+        String title;
+        int cur_song = mPlayList.getCurrentSongNumber();
+        if(cur_song != -1) {
+            title = getString(R.string.text_now);
+            title += ": " + getString(mPlayList.getCurrentSong().getTitleId());
+        }
+        else {
+            title = getString(R.string.text_nothing_is_playing);
+        }
+        setTitle(title);
+    }
+
+    // поместить в подзаголовок название следующей песни
+    public void updateSubtitle() {
+        String subTitle  = getString(R.string.text_next);
+        subTitle += ": " + getString(mPlayList.getNextSong().getTitleId());
+        getSupportActionBar().setSubtitle(subTitle);
     }
 
 }

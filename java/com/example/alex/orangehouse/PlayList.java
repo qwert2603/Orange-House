@@ -9,10 +9,12 @@ public class PlayList {
 
     private Song[] mSongs;
     private int mCurrentSongNumber = -1;
+    private int mNextSongNumber;
     private boolean mRandomMode = false;
+    private boolean mRepeatMode = false;
     private Random mRandom = new Random(System.currentTimeMillis());
     private AudioPlayer mPlayer;
-    LinkedList<OnPlayingModeChangedListener> mPlayingModeChangedListeners = new LinkedList<>();
+    LinkedList<OnPlayingModeChangedListener> mOnPlayingModeChangedListeners = new LinkedList<>();
 
     private static PlayList sPlayList;
 
@@ -30,6 +32,7 @@ public class PlayList {
                 new Song(R.raw.sigareti, R.string.song_title_sigareti_i, R.string.song_lyrics_sigareti_i),
                 new Song(R.raw.sneg_iz, R.string.song_title_sneg_iz, R.string.song_lyrics_sneg_iz)
         };
+        calculateNextSongNumber();
         mPlayer = AudioPlayer.get(context);
         mPlayer.setOnSongCompletionListener(new AudioPlayer.OnSongCompletionListener() {
             @Override
@@ -57,31 +60,41 @@ public class PlayList {
         return mCurrentSongNumber;
     }
 
-    public Song getCurrentSong() {
-        return getSongByNumber(mCurrentSongNumber);
-    }
-
     public Song getSongByNumber(int number) {
         return (number >= 0 && number < getSongCount()) ? mSongs[number] : null;
     }
 
-    public Song setNewSongNumber(int number) {
-        if(number >= 0 && number < getSongCount()) {
-            mCurrentSongNumber = number;
-        }
-        return getCurrentSong();
+    public Song getCurrentSong() {
+        return getSongByNumber(getCurrentSongNumber());
     }
 
-    private int getNextSongNumber() {
-        int res = mCurrentSongNumber;
-        if(mRandomMode) {
-            while (res == mCurrentSongNumber)
-                res = mRandom.nextInt(getSongCount());
+    public Song getNextSong() {
+        return getSongByNumber(getNextSongNumber());
+    }
+
+    public int getNextSongNumber() {
+        return (mRepeatMode && mCurrentSongNumber != -1) ? mCurrentSongNumber : mNextSongNumber;
+    }
+
+    public int getNextSongNumberIgnoringRepeat() {
+        return mNextSongNumber;
+    }
+
+    public void setNextSongNumber(int number) {
+        if(number >= 0 && number < getSongCount()) {
+            mNextSongNumber = number;
+            notifyOnPlayingModeChangedListeners();
         }
-        else {
-            res = (mCurrentSongNumber + 1) % getSongCount();
+    }
+
+    private void calculateNextSongNumber() {
+        mNextSongNumber = mCurrentSongNumber;
+        if (mRandomMode) {
+            while (mNextSongNumber == mCurrentSongNumber)
+                mNextSongNumber = mRandom.nextInt(getSongCount());
+        } else {
+            mNextSongNumber = (mCurrentSongNumber + 1) % getSongCount();
         }
-        return res;
     }
 
     public boolean getRandomMode() {
@@ -90,6 +103,17 @@ public class PlayList {
 
     public void setRandomMode(boolean randomMode) {
         mRandomMode = randomMode;
+        calculateNextSongNumber();
+        notifyOnPlayingModeChangedListeners();
+    }
+
+    public boolean getRepeatMode() {
+        return mRepeatMode;
+    }
+
+    public void setRepeatMode(boolean repeatMode) {
+        mRepeatMode = repeatMode;
+        notifyOnPlayingModeChangedListeners();
     }
 
     public void startNextSong() {
@@ -97,46 +121,56 @@ public class PlayList {
     }
 
     public void startNewSong(int songNumber) {
-        stop();
-        Song newSong = setNewSongNumber(songNumber);
+        mPlayer.stop();
+        Song newSong = getSongByNumber(songNumber);
         mPlayer.play(newSong);
-        notifyPlayingModeChangedListeners();
+
+        int prevSongNumber = mCurrentSongNumber;
+        mCurrentSongNumber = songNumber;
+        if(!mRepeatMode || (mCurrentSongNumber != prevSongNumber)) {
+            calculateNextSongNumber();
+        }
+
+        notifyOnPlayingModeChangedListeners();
     }
 
     public void pause() {
         mPlayer.pause();
-        notifyPlayingModeChangedListeners();
+        notifyOnPlayingModeChangedListeners();
     }
 
     public void resume() {
         mPlayer.resume();
-        notifyPlayingModeChangedListeners();
+        notifyOnPlayingModeChangedListeners();
     }
 
     public void stop() {
         mPlayer.stop();
-        notifyPlayingModeChangedListeners();
+        notifyOnPlayingModeChangedListeners();
     }
 
     public boolean isPlaying() {
         return mPlayer.isPlaying();
     }
 
-    // начало/пауза/продолжение/остановка воспроизведения или начало новой песни
+    // начало/пауза/продолжение/остановка воспроизведения или начало новой песни.
+    // а также изменение следующей песни.
+    // а также изменение режима рандома.
+    // а также изменение режима повтора.
     public interface OnPlayingModeChangedListener {
         void onPlayingModeChanged(PlayList ap);
     }
 
-    public void addPlayingModeChangedListener(OnPlayingModeChangedListener l) {
-        mPlayingModeChangedListeners.add(l);
+    public void addOnPlayingModeChangedListener(OnPlayingModeChangedListener l) {
+        mOnPlayingModeChangedListeners.add(l);
     }
 
-    public void removePlayingModeChangedListener(OnPlayingModeChangedListener l) {
-        mPlayingModeChangedListeners.remove(l);
+    public void removeOnPlayingModeChangedListener(OnPlayingModeChangedListener l) {
+        mOnPlayingModeChangedListeners.remove(l);
     }
 
-    private void notifyPlayingModeChangedListeners() {
-        for(OnPlayingModeChangedListener l : mPlayingModeChangedListeners)
+    private void notifyOnPlayingModeChangedListeners() {
+        for(OnPlayingModeChangedListener l : mOnPlayingModeChangedListeners)
             l.onPlayingModeChanged(this);
     }
 
