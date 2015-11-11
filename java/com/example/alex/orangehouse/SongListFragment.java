@@ -26,6 +26,10 @@ public class SongListFragment extends ListFragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
         setHasOptionsMenu(true);
+
+        Intent intent = new Intent(getActivity(), OrangePlayerService.class);
+        getActivity().startService(intent);
+
         mPlayList = PlayList.get(getActivity());
         mPlayList.setRandomMode(true);
         mPlayList.setRepeatMode(false);
@@ -91,7 +95,12 @@ public class SongListFragment extends ListFragment {
 
     @Override
     public void onDestroy() {
-        mPlayList.stop();
+        if (! mPlayList.isPlaying()) {
+            mPlayList.stop();
+
+            Intent intent = new Intent(getActivity(), OrangePlayerService.class);
+            getActivity().stopService(intent);
+        }
         super.onDestroy();
         mPlayList.removeOnPlayingModeChangedListener(mOnPlayingModeChangedListener);
     }
